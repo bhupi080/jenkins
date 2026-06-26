@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PATH = "/home/jenkins/.local/bin:${env.PATH}"
+        PATH = "${env.HOME}/.local/bin:${env.PATH}"
     }
 
     stages {
@@ -28,13 +28,19 @@ pipeline {
 
         stage('Install') {
             steps {
-                sh 'uv sync --frozen'
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv sync --frozen
+                '''
             }
         }
 
         stage('Verify') {
             steps {
-                sh 'uv run python -c "from main import app; print(app.title)"'
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv run python -c "from main import app; print(app.title)"
+                '''
             }
         }
     }
