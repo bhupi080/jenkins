@@ -1,0 +1,14 @@
+[Unit]
+Description=Hello FastAPI
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/hello-api
+Environment=PATH=/home/ubuntu/.local/bin:/usr/bin
+ExecStart=/home/ubuntu/.local/bin/uv run uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
