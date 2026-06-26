@@ -76,6 +76,8 @@ fi
 cd /opt/hello-api
 uv python install 3.13
 uv sync --frozen
+sudo cp deploy/hello-api.service /etc/systemd/system/hello-api.service
+sudo systemctl daemon-reload
 sudo systemctl restart hello-api
 EOF
                     """
