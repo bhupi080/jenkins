@@ -69,10 +69,11 @@ pipeline {
 
                         rsync -avz --delete \\
                           -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \\
-                          --exclude .venv --exclude .git \\
+                          --exclude .venv --exclude .git --exclude __pycache__ \\
                           ./ \${SSH_USER}@\${APP_HOST}:/opt/hello-api/
 
                         ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \${SSH_USER}@\${APP_HOST} 'bash -s' <<'EOF'
+set -e
 export PATH="\$HOME/.local/bin:\$PATH"
 if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -83,7 +84,11 @@ uv python install 3.13
 uv sync --frozen
 sudo cp deploy/hello-api.service /etc/systemd/system/hello-api.service
 sudo systemctl daemon-reload
+sudo systemctl enable hello-api
 sudo systemctl restart hello-api
+sleep 3
+sudo systemctl is-active --quiet hello-api
+curl -sf http://localhost:9000/ | grep hello
 EOF
                     """
                 }
@@ -103,7 +108,7 @@ EOF
                     sh """
                         chmod 600 \$SSH_KEY
                         ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \${SSH_USER}@${params.APP_HOST.trim()} \\
-                          "curl -sf http://localhost:9000/ | grep hello"
+                          "curl -s http://localhost:9000/ && sudo systemctl status hello-api --no-pager"
                     """
                 }
             }
