@@ -91,7 +91,7 @@ EOF
                 sshagent(credentials: ['deploy-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ubuntu@${params.APP_HOST.trim()} \\
-                          "curl -sf http://localhost:8000/ | grep hello"
+                          "curl -sf http://localhost:9000/ | grep hello"
                     """
                 }
             }
