@@ -57,17 +57,22 @@ pipeline {
                 expression { return params.APP_HOST?.trim() }
             }
             steps {
-                sshagent(credentials: ['deploy-ssh-key']) {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'deploy-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
                     sh """
                         set -e
                         APP_HOST="${params.APP_HOST.trim()}"
+                        chmod 600 \$SSH_KEY
 
                         rsync -avz --delete \\
-                          -e "ssh -o StrictHostKeyChecking=no" \\
+                          -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \\
                           --exclude .venv --exclude .git \\
-                          ./ ubuntu@\${APP_HOST}:/opt/hello-api/
+                          ./ \${SSH_USER}@\${APP_HOST}:/opt/hello-api/
 
-                        ssh -o StrictHostKeyChecking=no ubuntu@\${APP_HOST} 'bash -s' <<'EOF'
+                        ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \${SSH_USER}@\${APP_HOST} 'bash -s' <<'EOF'
 export PATH="\$HOME/.local/bin:\$PATH"
 if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -90,9 +95,14 @@ EOF
                 expression { return params.APP_HOST?.trim() }
             }
             steps {
-                sshagent(credentials: ['deploy-ssh-key']) {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'deploy-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@${params.APP_HOST.trim()} \\
+                        chmod 600 \$SSH_KEY
+                        ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \${SSH_USER}@${params.APP_HOST.trim()} \\
                           "curl -sf http://localhost:9000/ | grep hello"
                     """
                 }
